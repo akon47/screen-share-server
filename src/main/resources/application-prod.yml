@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: 'jdbc:mysql://{datasource-url}?serverTimezone=Asia/Seoul'
+    username: '{datasource-username}'
+    password: '{datasource-password}'
+  sql:
+    init:
+      mode: never
+  redis:
+    host: '{redis-host}'
+    port: {redis-port}
+  jpa:
+    database: mysql
+    show-sql: false
+    hibernate:
+      ddl-auto: update
