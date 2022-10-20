@@ -17,13 +17,13 @@ import javax.validation.Valid;
 
 @RestController
 @Api(tags = "Sharing")
-@RequestMapping(value = Constants.API_PREFIX)
+@RequestMapping(value = Constants.API_PREFIX + "/v1/sharing")
 @RequiredArgsConstructor
 public class SharingController {
     private final SharingService sharingService;
 
     @ApiOperation(value = "Create New Sharing Channel", notes = "Create a new sharing channel.")
-    @PostMapping(value = "/v1/channels")
+    @PostMapping(value = "channels")
     public CreateSharingChannelResponseDto createSharingChannel(@ApiParam(value = "Information for creating a shared channel", required = true) @RequestBody @Valid final CreateSharingChannelRequestDto createSharingChannelRequestDto) {
         return sharingService.createSharingChannel(createSharingChannelRequestDto);
     }
