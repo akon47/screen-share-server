@@ -24,7 +24,10 @@ public class JwtStompAuthenticationHandler implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+        var subscriptionId = accessor.getSubscriptionId();
+        var sessionId = accessor.getSessionId();
+        var destination = accessor.getDestination();
+        if (StompCommand.CONNECT.equals(accessor.getCommand()) || StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
             String bearerToken = accessor.getFirstNativeHeader(Constants.AUTHORIZATION_HEADER);
             String jwt = tokenProvider.extractTokenFromHeader(bearerToken);
             if (StringUtils.hasText(jwt)) {
