@@ -1,5 +1,9 @@
 package com.hwans.screenshareserver.common.security.jwt;
 
+import com.hwans.screenshareserver.common.Constants;
+import com.hwans.screenshareserver.common.security.RoleType;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
+import java.util.Date;
+import java.util.UUID;
 
 @Component
 @Slf4j
@@ -34,5 +40,29 @@ public class JwtTokenProvider implements InitializingBean {
             return token.substring(7);
         }
         return token;
+    }
+
+    public String createHostToken(UUID channelId) {
+        long now = (new Date()).getTime();
+        Date registerTokenExpiresIn = new Date(now + Constants.HOST_TOKEN_EXPIRES_TIME);
+        String registerToken = Jwts.builder()
+                .setSubject(channelId.toString())
+                .claim(AUTHORITIES_KEY, RoleType.HOST.getName())
+                .signWith(tokenSecretKey, SignatureAlgorithm.HS256)
+                .setExpiration(registerTokenExpiresIn)
+                .compact();
+        return registerToken;
+    }
+
+    public String createGuestToken(UUID channelId) {
+        long now = (new Date()).getTime();
+        Date registerTokenExpiresIn = new Date(now + Constants.GUEST_TOKEN_EXPIRES_TIME);
+        String registerToken = Jwts.builder()
+                .setSubject(channelId.toString())
+                .claim(AUTHORITIES_KEY, RoleType.GUEST.getName())
+                .signWith(tokenSecretKey, SignatureAlgorithm.HS256)
+                .setExpiration(registerTokenExpiresIn)
+                .compact();
+        return registerToken;
     }
 }

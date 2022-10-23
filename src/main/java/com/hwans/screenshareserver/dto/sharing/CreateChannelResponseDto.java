@@ -6,13 +6,14 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @Getter
 @Builder
 @ApiModel(description = "Dto for creating sharing channel response")
 public class CreateChannelResponseDto implements Serializable {
     @ApiModelProperty(value = "channel id", required = true, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    String id;
-    @ApiModelProperty(value = "channel owner token", required = true, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    String ownerToken;
+    UUID id;
+    @ApiModelProperty(value = "channel host token", required = true, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    String hostToken;
 }
