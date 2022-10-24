@@ -7,12 +7,13 @@ import com.hwans.screenshareserver.dto.sharing.JoinChannelRequestDto;
 import com.hwans.screenshareserver.dto.sharing.JoinChannelResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class SharingServiceImpl implements SharingService {
+public class SharingServiceImpl extends TextWebSocketHandler implements SharingService {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override

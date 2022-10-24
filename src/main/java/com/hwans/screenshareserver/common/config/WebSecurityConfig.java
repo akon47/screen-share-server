@@ -29,8 +29,8 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .httpBasic().disable()
-                .csrf().disable()
-                .cors().configurationSource(request -> corsConfiguration())
+                .csrf().disable().cors()
+                //.cors().configurationSource(request -> corsConfiguration())
             .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);

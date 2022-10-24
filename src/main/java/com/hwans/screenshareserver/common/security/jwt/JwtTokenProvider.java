@@ -2,8 +2,7 @@ package com.hwans.screenshareserver.common.security.jwt;
 
 import com.hwans.screenshareserver.common.Constants;
 import com.hwans.screenshareserver.common.security.RoleType;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +13,7 @@ import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -40,6 +40,44 @@ public class JwtTokenProvider implements InitializingBean {
             return token.substring(7);
         }
         return token;
+    }
+
+    public JwtStatus validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(tokenSecretKey).build().parseClaimsJws(token);
+            return JwtStatus.ACCESS;
+        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
+            log.info("Invalid JWT signature.");
+            log.trace("Invalid JWT signature trace: {}", e);
+        } catch (ExpiredJwtException e) {
+            log.info("Expired JWT token.");
+            log.trace("Expired JWT token trace: {}", e);
+            return JwtStatus.EXPIRED;
+        } catch (UnsupportedJwtException e) {
+            log.info("Unsupported JWT token.");
+            log.trace("Unsupported JWT token trace: {}", e);
+        } catch (IllegalArgumentException e) {
+            log.info("JWT token compact of handler are invalid.");
+            log.trace("JWT token compact of handler are invalid trace: {}", e);
+        }
+        return JwtStatus.DENIED;
+    }
+
+    public Optional<String> getChannelIdFromToken(String token) {
+        try {
+            return Optional.ofNullable(
+                    Jwts
+                            .parserBuilder()
+                            .setSigningKey(tokenSecretKey)
+                            .build()
+                            .parseClaimsJws(token)
+                            .getBody()
+                            .getSubject());
+
+        } catch (ExpiredJwtException | SecurityException | MalformedJwtException | UnsupportedJwtException |
+                 IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 
     public String createHostToken(UUID channelId) {

@@ -22,8 +22,8 @@ public class EmbeddedRedisConfig {
 
     @PostConstruct
     public void redisServer() throws IOException {
-        redisServer = new RedisServer(redisProperties.getPort());
-        redisServer.start();
+        //redisServer = new RedisServer(redisProperties.getPort());
+        //redisServer.start();
     }
 
     @PreDestroy
