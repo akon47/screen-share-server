@@ -30,7 +30,7 @@ public class WebSecurityConfig {
         http
                 .httpBasic().disable()
                 .csrf().disable().cors()
-                //.cors().configurationSource(request -> corsConfiguration())
+                .cors().configurationSource(request -> corsConfiguration())
             .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
