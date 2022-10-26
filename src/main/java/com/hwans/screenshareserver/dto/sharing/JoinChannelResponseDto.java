@@ -12,8 +12,10 @@ import java.util.UUID;
 @Builder
 @ApiModel(description = "Dto for join sharing channel response")
 public class JoinChannelResponseDto implements Serializable {
+    @ApiModelProperty(value = "guest user id", required = true, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    UUID userId;
     @ApiModelProperty(value = "channel id", required = true, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    UUID id;
+    UUID channelId;
     @ApiModelProperty(value = "channel guest token", required = true, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     String guestToken;
 }

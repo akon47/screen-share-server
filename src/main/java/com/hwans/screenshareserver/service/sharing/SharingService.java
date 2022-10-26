@@ -4,6 +4,7 @@ import com.hwans.screenshareserver.dto.sharing.CreateChannelRequestDto;
 import com.hwans.screenshareserver.dto.sharing.CreateChannelResponseDto;
 import com.hwans.screenshareserver.dto.sharing.JoinChannelRequestDto;
 import com.hwans.screenshareserver.dto.sharing.JoinChannelResponseDto;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;

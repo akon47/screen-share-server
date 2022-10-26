@@ -2,24 +2,29 @@ package com.hwans.screenshareserver.common.security.jwt;
 
 import com.hwans.screenshareserver.common.Constants;
 import com.hwans.screenshareserver.common.security.RoleType;
+import com.hwans.screenshareserver.common.security.UserAuthenticationDetails;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
 public class JwtTokenProvider implements InitializingBean {
-    private static final String AUTHORITIES_KEY = "auth";
+    private static final String ROLE_TYPE_KEY = "role-type";
+    private static final String CHANNEL_ID_KEY = "channel-id";
     private final String tokenSecretKeyBase64Secret;
 
     private Key tokenSecretKey;
@@ -63,41 +68,41 @@ public class JwtTokenProvider implements InitializingBean {
         return JwtStatus.DENIED;
     }
 
-    public Optional<String> getChannelIdFromToken(String token) {
-        try {
-            return Optional.ofNullable(
-                    Jwts
-                            .parserBuilder()
-                            .setSigningKey(tokenSecretKey)
-                            .build()
-                            .parseClaimsJws(token)
-                            .getBody()
-                            .getSubject());
+    public UserAuthenticationDetails getUserAuthenticationDetails(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(tokenSecretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
 
-        } catch (ExpiredJwtException | SecurityException | MalformedJwtException | UnsupportedJwtException |
-                 IllegalArgumentException e) {
-            return Optional.empty();
-        }
+        Collection<? extends GrantedAuthority> authorities =
+                Arrays.stream(claims.get(ROLE_TYPE_KEY).toString().split(","))
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
+
+        return new UserAuthenticationDetails(UUID.fromString(claims.getSubject()), UUID.fromString(claims.get(CHANNEL_ID_KEY).toString()), authorities);
     }
 
-    public String createHostToken(UUID channelId) {
+    public String createHostToken(UUID userId, UUID channelId) {
         long now = (new Date()).getTime();
         Date registerTokenExpiresIn = new Date(now + Constants.HOST_TOKEN_EXPIRES_TIME);
         String registerToken = Jwts.builder()
-                .setSubject(channelId.toString())
-                .claim(AUTHORITIES_KEY, RoleType.HOST.getName())
+                .setSubject(userId.toString())
+                .claim(ROLE_TYPE_KEY, RoleType.HOST.getName())
+                .claim(CHANNEL_ID_KEY, channelId.toString())
                 .signWith(tokenSecretKey, SignatureAlgorithm.HS256)
                 .setExpiration(registerTokenExpiresIn)
                 .compact();
         return registerToken;
     }
 
-    public String createGuestToken(UUID channelId) {
+    public String createGuestToken(UUID userId, UUID channelId) {
         long now = (new Date()).getTime();
         Date registerTokenExpiresIn = new Date(now + Constants.GUEST_TOKEN_EXPIRES_TIME);
         String registerToken = Jwts.builder()
-                .setSubject(channelId.toString())
-                .claim(AUTHORITIES_KEY, RoleType.GUEST.getName())
+                .setSubject(userId.toString())
+                .claim(ROLE_TYPE_KEY, RoleType.GUEST.getName())
+                .claim(CHANNEL_ID_KEY, channelId.toString())
                 .signWith(tokenSecretKey, SignatureAlgorithm.HS256)
                 .setExpiration(registerTokenExpiresIn)
                 .compact();
