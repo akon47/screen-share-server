@@ -1,5 +1,6 @@
 package com.hwans.screenshareserver.common.config;
 
+import com.hwans.screenshareserver.common.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
