@@ -9,7 +9,7 @@ import lombok.Getter;
 import java.io.Serializable;
 
 @Getter
-@ApiModel(description = "Dto for join sharing channel")
+@ApiModel(description = "dto for join sharing channel")
 public class JoinChannelRequestDto implements Serializable {
     @ApiModelProperty(value = "channel password", required = false)
     String password;

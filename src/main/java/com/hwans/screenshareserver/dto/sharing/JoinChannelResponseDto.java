@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Getter
 @Builder
-@ApiModel(description = "Dto for join sharing channel response")
+@ApiModel(description = "dto for join sharing channel response")
 public class JoinChannelResponseDto implements Serializable {
     @ApiModelProperty(value = "guest user id", required = true, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     UUID userId;
