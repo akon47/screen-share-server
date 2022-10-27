@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 
 @Getter
-@ApiModel(description = "Dto for creating sharing channel")
+@ApiModel(description = "dto for creating sharing channel")
 public class CreateChannelRequestDto implements Serializable {
     @ApiModelProperty(value = "channel password", required = false)
     String password;
