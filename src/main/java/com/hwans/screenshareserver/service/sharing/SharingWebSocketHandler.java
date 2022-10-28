@@ -45,18 +45,40 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
     }
 
     private final JwtTokenProvider jwtTokenProvider;
-    private HashMap<String, WebSocketSession> sessions = new HashMap<>();
+    private HashMap<String, UUID> sessions = new HashMap<>();
     private HashMap<UUID, SharingSession> userSessions = new HashMap<>();
     private HashMap<UUID, HashSet<UUID>> channels = new HashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        sessions.put(session.getId(), session);
+
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        sessions.remove(session.getId());
+        var userId = sessions.get(session.getId());
+        if (userId == null) {
+            return;
+        }
+        sessions.remove(userId);
+
+        var sharingSession = userSessions.get(userId);
+        if (sharingSession == null) {
+            return;
+        }
+        userSessions.remove(userId);
+
+        var channelUsers = channels.get(sharingSession.getChannelId());
+        if (channelUsers == null) {
+            return;
+        }
+
+        channelUsers.remove(userId);
+
+        channelUsers.stream()
+                .map(x -> userSessions.getOrDefault(x, null))
+                .filter(x -> x != null && x.getUserId() != userId)
+                .forEach(x -> x.sendMessage(JoinUserDto.builder().type(PayloadType.PART_USER).userId(userId).build()));
     }
 
     @Override
@@ -85,15 +107,18 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
         var userId = userAuthenticationDetails.getId();
         var channelId = userAuthenticationDetails.getChannelId();
 
-        if(userSessions.containsKey(userId)) {
+        if (userSessions.containsKey(userId)) {
             var existSharingSession = userSessions.get(userId);
-            if(!existSharingSession.session.getId().equals(session.getId())) {
+            if (!existSharingSession.session.getId().equals(session.getId())) {
                 existSharingSession.session.close(CloseStatus.SESSION_NOT_RELIABLE);
             }
             userSessions.replace(userId, new SharingSession(session, userId, channelId));
         } else {
             userSessions.put(userId, new SharingSession(session, userId, channelId));
         }
+
+        sessions.put(session.getId(), userId);
+
         channels.putIfAbsent(channelId, new HashSet<>());
 
         var channelUsers = channels.get(channelId);
@@ -105,22 +130,24 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void OnPartChannel(WebSocketSession session, UserAuthenticationDetails userAuthenticationDetails) {
-        var userId = userAuthenticationDetails.getId();
-        if(!userSessions.containsKey(userId)) {
-            throw new RuntimeException();
-        }
+
     }
 
     private void OnRelaySessionDescription(WebSocketSession session, UserAuthenticationDetails userAuthenticationDetails, RelaySessionDescriptionDto relaySessionDescriptionDto) {
         var userId = userAuthenticationDetails.getId();
         var channelId = userAuthenticationDetails.getChannelId();
 
+        var channelUsers = channels.get(channelId);
+        if (channelUsers == null || !channelUsers.contains(relaySessionDescriptionDto.getUserId())) {
+            return;
+        }
+
         userSessions.get(relaySessionDescriptionDto.getUserId())
                 .sendMessage(RelaySessionDescriptionDto
                         .builder()
-                            .type(PayloadType.RELAY_SESSION_DESCRIPTION)
-                            .userId(userId)
-                            .sessionDescription(relaySessionDescriptionDto.getSessionDescription())
+                        .type(PayloadType.RELAY_SESSION_DESCRIPTION)
+                        .userId(userId)
+                        .sessionDescription(relaySessionDescriptionDto.getSessionDescription())
                         .build());
     }
 
@@ -128,12 +155,17 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
         var userId = userAuthenticationDetails.getId();
         var channelId = userAuthenticationDetails.getChannelId();
 
+        var channelUsers = channels.get(channelId);
+        if (channelUsers == null || !channelUsers.contains(relayIceCandidateDto.getUserId())) {
+            return;
+        }
+
         userSessions.get(relayIceCandidateDto.getUserId())
                 .sendMessage(RelayIceCandidateDto
                         .builder()
-                            .type(PayloadType.RELAY_ICE_CANDIDATE)
-                            .userId(userId)
-                            .iceCandidate(relayIceCandidateDto.getIceCandidate())
+                        .type(PayloadType.RELAY_ICE_CANDIDATE)
+                        .userId(userId)
+                        .iceCandidate(relayIceCandidateDto.getIceCandidate())
                         .build());
     }
 }
