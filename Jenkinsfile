@@ -18,6 +18,8 @@ pipeline {
         SPRING_DATASOURCE_USERNAME = 'screenshare'
         SPRING_DATASOURCE_PASSWORD = 'screenshare'
 
+        SPRING_JWT_COMMON_SECRET_KEY = credentials('spring-jwt-base64-common-secret')
+
         SPRING_REDIS_HOST = 'localhost'
         SPRING_REDIS_PORT = '6379'
 
@@ -49,8 +51,11 @@ pipeline {
                     prodProperties = prodProperties.replaceAll(/\{datasource-url\}/, SPRING_DATASOURCE_URL)
                     prodProperties = prodProperties.replaceAll(/\{datasource-username\}/, SPRING_DATASOURCE_USERNAME)
                     prodProperties = prodProperties.replaceAll(/\{datasource-password\}/, SPRING_DATASOURCE_PASSWORD)
+
                     prodProperties = prodProperties.replaceAll(/\{redis-host\}/, SPRING_REDIS_HOST)
                     prodProperties = prodProperties.replaceAll(/\{redis-port\}/, SPRING_REDIS_PORT)
+
+                    prodProperties = prodProperties.replaceAll(/\{jwt-base64-common-secret\}/, SPRING_JWT_COMMON_SECRET_KEY)
 
                     writeFile file: SPRING_PROD_PROPERTIES_PATH, text: prodProperties
                 }
