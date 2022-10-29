@@ -6,8 +6,9 @@ import org.springframework.http.HttpStatus;
 public class ErrorCodes {
     @RequiredArgsConstructor
     public enum BadRequest implements ErrorCode {
-        BAD_REQUEST("잘못된 요청입니다."),
-        INVALID_PARAMETER("잘못된 파라미터입니다."),
+        BAD_REQUEST("Bad request."),
+        INVALID_PARAMETER("Invalid parameters."),
+        INVALID_CHANNEL_PASSWORD("Please check the channel password."),
         ;
 
         private final String defaultMessage;
@@ -30,7 +31,7 @@ public class ErrorCodes {
 
     @RequiredArgsConstructor
     public enum Unauthorized implements ErrorCode {
-        UNAUTHORIZED("유효한 자격증명이 존재하지 않습니다."),
+        UNAUTHORIZED("Valid credentials do not exist."),
         ;
 
         private final String defaultMessage;
@@ -53,7 +54,7 @@ public class ErrorCodes {
 
     @RequiredArgsConstructor
     public enum Forbidden implements ErrorCode {
-        FORBIDDEN("접근 권한이 없습니다."),
+        FORBIDDEN("You don't have access."),
         ;
 
         private final String defaultMessage;
@@ -76,7 +77,7 @@ public class ErrorCodes {
 
     @RequiredArgsConstructor
     public enum NotFound implements ErrorCode {
-        NOT_FOUND("존재하지 않습니다."),
+        NOT_FOUND("does not exist."),
         ;
 
         private final String defaultMessage;
@@ -99,7 +100,7 @@ public class ErrorCodes {
 
     @RequiredArgsConstructor
     public enum Conflict implements ErrorCode {
-        CONFLICT("요청이 충돌하여 요청을 완료 할 수 없습니다."),
+        CONFLICT("The request could not be completed due to conflicting requests."),
         ;
 
         private final String defaultMessage;
@@ -122,7 +123,7 @@ public class ErrorCodes {
 
     @RequiredArgsConstructor
     public enum InternalServerError implements ErrorCode {
-        INTERNAL_SERVER_ERROR("서버 내부 오류입니다."),
+        INTERNAL_SERVER_ERROR("This is an internal server error."),
         ;
 
         private final String defaultMessage;
