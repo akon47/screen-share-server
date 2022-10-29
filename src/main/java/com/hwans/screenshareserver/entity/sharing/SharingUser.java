@@ -1,31 +1,31 @@
 package com.hwans.screenshareserver.entity.sharing;
 
-import com.hwans.screenshareserver.common.security.jwt.JwtTokenProvider;
 import com.hwans.screenshareserver.entity.BaseEntity;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tb_sharing_channel")
+@Table(name = "tb_sharing_user")
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SharingChannel extends BaseEntity {
+public class SharingUser extends BaseEntity {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
-    @Column(length = 64)
-    private String password;
-    @OneToOne
-    @JoinColumn(name = "host_user_id")
+    @Column(length = 32)
+    private String role;
+    @Column(length = 255)
     @Setter
-    private SharingUser host;
+    private String token;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "channel_id", nullable = false)
+    @Setter
+    private SharingChannel channel;
 }
