@@ -2,6 +2,7 @@ package com.hwans.screenshareserver.common.config;
 
 import com.hwans.screenshareserver.common.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.stereotype.Component;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 @RequiredArgsConstructor
@@ -20,6 +22,9 @@ import java.util.Collections;
 @EnableWebSecurity
 @Component
 public class WebSecurityConfig {
+
+    @Value("${allowedOrigins}")
+    private String[] allowedOrigins;
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -42,7 +47,7 @@ public class WebSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedMethods(Collections.singletonList(CorsConfiguration.ALL));
         configuration.setAllowCredentials(true);
-        configuration.addAllowedOrigin("http://localhost:8081");
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
         return configuration.applyPermitDefaultValues();
     }
 }

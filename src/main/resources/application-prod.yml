@@ -17,3 +17,4 @@ spring:
       ddl-auto: update
 jwt:
   base64-secret: '{jwt-base64-common-secret}'
+allowedOrigins: 'https://screenshare.kimhwan.kr'
