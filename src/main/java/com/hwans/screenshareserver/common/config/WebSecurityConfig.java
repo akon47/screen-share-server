@@ -41,6 +41,8 @@ public class WebSecurityConfig {
     private CorsConfiguration corsConfiguration() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedMethods(Collections.singletonList(CorsConfiguration.ALL));
+        configuration.setAllowCredentials(true);
+        configuration.addAllowedOrigin("http://localhost:8081");
         return configuration.applyPermitDefaultValues();
     }
 }
