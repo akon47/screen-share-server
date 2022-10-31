@@ -18,7 +18,8 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = RelaySessionDescriptionDto.class, name = "RELAY_SESSION_DESCRIPTION"),
         @JsonSubTypes.Type(value = RelayIceCandidateDto.class, name = "RELAY_ICE_CANDIDATE"),
         @JsonSubTypes.Type(value = JoinUserDto.class, name = "JOIN_USER"),
-        @JsonSubTypes.Type(value = PartUserDto.class, name = "PART_USER")
+        @JsonSubTypes.Type(value = PartUserDto.class, name = "PART_USER"),
+        @JsonSubTypes.Type(value = NewMessageDto.class, name = "NEW_MESSAGE")
 })
 @ApiModel(description = "dto for websocket")
 public class PayloadDto implements Serializable {

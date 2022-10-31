@@ -1,5 +1,6 @@
-package com.hwans.screenshareserver.common.security;
+package com.hwans.screenshareserver.service.authentication;
 
+import com.hwans.screenshareserver.common.security.RoleType;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -21,10 +22,10 @@ public class UserAuthenticationDetails extends User implements UserDetails {
     }
 
     public boolean isHost() {
-        return getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals(RoleType.HOST.toString()));
+        return getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals(RoleType.HOST.getName()));
     }
 
     public boolean isGuest() {
-        return getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals(RoleType.GUEST.toString()));
+        return getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals(RoleType.GUEST.getName()));
     }
 }

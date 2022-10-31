@@ -1,26 +1,21 @@
 package com.hwans.screenshareserver.service.sharing;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hwans.screenshareserver.common.security.UserAuthenticationDetails;
+import com.hwans.screenshareserver.service.authentication.UserAuthenticationDetails;
 import com.hwans.screenshareserver.common.security.jwt.JwtTokenProvider;
 import com.hwans.screenshareserver.dto.sharing.*;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
@@ -167,5 +162,18 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
                         .userId(userId)
                         .iceCandidate(relayIceCandidateDto.getIceCandidate())
                         .build());
+    }
+
+    public void broadcastNewMessage(UUID channelId, SimpleMessageDto simpleMessageDto)
+    {
+        var channelUsers = channels.get(channelId);
+        if (channelUsers == null) {
+            return;
+        }
+
+        var newMessagePayload = NewMessageDto.builder().type(PayloadType.NEW_MESSAGE).message(simpleMessageDto).build();
+        channelUsers.stream()
+                .map(x -> userSessions.get(x))
+                .forEach(x -> x.sendMessage(newMessagePayload));
     }
 }
