@@ -32,6 +32,7 @@ public class ErrorCodes {
     @RequiredArgsConstructor
     public enum Unauthorized implements ErrorCode {
         UNAUTHORIZED("Valid credentials do not exist."),
+        TOKEN_EXPIRED("Token expired."),
         ;
 
         private final String defaultMessage;

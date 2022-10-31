@@ -8,24 +8,27 @@ import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tb_sharing_user")
+@Table(name = "tb_sharing_message")
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SharingUser extends BaseEntity {
+public class SharingMessage extends BaseEntity {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
-    @Column(length = 32, nullable = false)
-    private String role;
-    @Column(length = 255)
+    @Column(length = 2000, nullable = false)
+    private String message;
+    @ManyToOne
+    @JoinColumn(name = "author_id", nullable = false)
     @Setter
-    private String token;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "channel_id", nullable = false)
-    @Setter
-    private SharingChannel channel;
+    private SharingUser author;
+    @Column(nullable = false)
+    private boolean deleted;
+
+    public UUID getAuthorId() {
+        return this.author.getId();
+    }
 }

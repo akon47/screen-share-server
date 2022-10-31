@@ -2,7 +2,7 @@ package com.hwans.screenshareserver.common.security.jwt;
 
 import com.hwans.screenshareserver.common.Constants;
 import com.hwans.screenshareserver.common.security.RoleType;
-import com.hwans.screenshareserver.common.security.UserAuthenticationDetails;
+import com.hwans.screenshareserver.service.authentication.UserAuthenticationDetails;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -81,6 +81,11 @@ public class JwtTokenProvider implements InitializingBean {
                         .collect(Collectors.toList());
 
         return new UserAuthenticationDetails(UUID.fromString(claims.getSubject()), UUID.fromString(claims.get(CHANNEL_ID_KEY).toString()), authorities);
+    }
+
+    public Authentication getAuthentication(String token) {
+        var principal = getUserAuthenticationDetails(token);
+        return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
     }
 
     public String createHostToken(UUID userId, UUID channelId) {

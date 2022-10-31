@@ -1,10 +1,13 @@
 package com.hwans.screenshareserver.common.config;
 
+import com.hwans.screenshareserver.common.security.jwt.JwtAccessDeniedHandler;
+import com.hwans.screenshareserver.common.security.jwt.JwtAuthenticationEntryPoint;
 import com.hwans.screenshareserver.common.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,6 +25,10 @@ import java.util.Collections;
 @EnableWebSecurity
 @Component
 public class WebSecurityConfig {
+    private final JwtTokenProvider tokenProvider;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
     @Value("${allowedOrigins}")
     private String[] allowedOrigins;
@@ -39,7 +46,13 @@ public class WebSecurityConfig {
                 .cors().configurationSource(request -> corsConfiguration())
             .and()
                 .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+                .apply(new JwtSecurityConfig(tokenProvider, redisTemplate))
+            .and()
+                .exceptionHandling()
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                .accessDeniedHandler(jwtAccessDeniedHandler);
         return http.build();
     }
 
