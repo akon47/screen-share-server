@@ -48,13 +48,13 @@ public class SharingController {
 
     @ApiOperation(value = "write message to sharing channel", notes = "write message to sharing channel.")
     @PostMapping(value = "/channels/{channelId}/messages")
-    public void writeChannelMessages(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+    public SimpleMessageDto writeChannelMessages(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                                      @ApiParam(value = "channel id") @PathVariable UUID channelId,
                                      @ApiParam(value = "message data", required = true) @RequestBody @Valid final CreateMessageRequestDto createMessageRequestDto) {
         if (!channelId.equals(userAuthenticationDetails.getChannelId())) {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
         }
 
-        sharingService.writeMessage(userAuthenticationDetails.getId(), createMessageRequestDto);
+        return sharingService.writeMessage(userAuthenticationDetails.getId(), createMessageRequestDto);
     }
 }
