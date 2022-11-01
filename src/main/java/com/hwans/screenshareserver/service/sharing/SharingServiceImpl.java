@@ -96,7 +96,7 @@ public class SharingServiceImpl implements SharingService, UserDetailsService {
 
     @Override
     @Transactional
-    public void writeMessage(UUID authorUserId, CreateMessageRequestDto createMessageRequestDto) {
+    public SimpleMessageDto writeMessage(UUID authorUserId, CreateMessageRequestDto createMessageRequestDto) {
         var authorUser = sharingUserRepository
                 .findById(authorUserId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
@@ -106,8 +106,9 @@ public class SharingServiceImpl implements SharingService, UserDetailsService {
                 .message(createMessageRequestDto.getMessage())
                 .author(authorUser)
                 .build());
-
-        sharingWebSocketHandler.broadcastNewMessage(authorUser.getChannel().getId(), sharingMapper.EntityToSimpleMessageDto(savedMessage));
+        var simpleMessageDto = sharingMapper.entityToSimpleMessageDto(savedMessage);
+        sharingWebSocketHandler.broadcastNewMessage(authorUser.getChannel().getId(), simpleMessageDto);
+        return simpleMessageDto;
     }
 
     @Override
@@ -123,7 +124,7 @@ public class SharingServiceImpl implements SharingService, UserDetailsService {
         }
         var last = foundMessages.size() <= size;
         return SliceDto.<SimpleMessageDto>builder()
-                .data(foundMessages.stream().limit(size).map(sharingMapper::EntityToSimpleMessageDto).toList())
+                .data(foundMessages.stream().limit(size).map(sharingMapper::entityToSimpleMessageDto).toList())
                 .size((int) foundMessages.stream().limit(size).count())
                 .empty(foundMessages.isEmpty())
                 .first(cursorId.isEmpty())

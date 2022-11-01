@@ -17,7 +17,7 @@ public interface SharingService {
     JoinChannelResponseDto joinChannel(@Valid @NotNull UUID channelId, @Valid JoinChannelRequestDto joinChannelRequestDto);
 
     @Validated
-    void writeMessage(@Valid @NotNull UUID authorUserId, @Valid CreateMessageRequestDto createMessageRequestDto);
+    SimpleMessageDto writeMessage(@Valid @NotNull UUID authorUserId, @Valid CreateMessageRequestDto createMessageRequestDto);
 
     SliceDto<SimpleMessageDto> getMessages(@Valid @NotNull UUID channelId, Optional<UUID> cursorId, int size);
 }

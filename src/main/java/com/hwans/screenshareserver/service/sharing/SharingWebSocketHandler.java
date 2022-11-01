@@ -1,6 +1,8 @@
 package com.hwans.screenshareserver.service.sharing;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.hwans.screenshareserver.service.authentication.UserAuthenticationDetails;
 import com.hwans.screenshareserver.common.security.jwt.JwtTokenProvider;
 import com.hwans.screenshareserver.dto.sharing.*;
@@ -31,6 +33,8 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
         public boolean sendMessage(PayloadDto payloadDto) {
             try {
                 var objectMapper = new ObjectMapper();
+                objectMapper.registerModule(new JavaTimeModule());
+                objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
                 this.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(payloadDto)));
                 return true;
             } catch (IOException e) {
