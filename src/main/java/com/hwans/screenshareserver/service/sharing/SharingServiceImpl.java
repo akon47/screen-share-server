@@ -82,9 +82,9 @@ public class SharingServiceImpl implements SharingService, UserDetailsService {
         var savedGuestUser = sharingUserRepository.save(SharingUser
                 .builder()
                 .role(RoleType.GUEST.getName())
-                .token(jwtTokenProvider.createGuestToken(UUID.randomUUID(), channelId))
                 .channel(channel)
                 .build());
+        savedGuestUser.setToken(jwtTokenProvider.createGuestToken(savedGuestUser.getId(), channelId));
 
         return JoinChannelResponseDto
                 .builder()
