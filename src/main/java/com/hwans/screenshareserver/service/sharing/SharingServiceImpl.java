@@ -6,6 +6,7 @@ import com.hwans.screenshareserver.common.errors.exception.RestApiException;
 import com.hwans.screenshareserver.common.security.RoleType;
 import com.hwans.screenshareserver.common.security.jwt.JwtStatus;
 import com.hwans.screenshareserver.common.security.jwt.JwtTokenProvider;
+import com.hwans.screenshareserver.dto.common.CollectionDto;
 import com.hwans.screenshareserver.dto.common.SliceDto;
 import com.hwans.screenshareserver.dto.sharing.*;
 import com.hwans.screenshareserver.entity.sharing.SharingChannel;
@@ -131,6 +132,16 @@ public class SharingServiceImpl implements SharingService, UserDetailsService {
                 .last(last)
                 .cursorId(last ? null : foundMessages.stream().limit(size).skip(size - 1).findFirst().map(SharingMessage::getId).orElse(null))
                 .build();
+    }
+
+    @Override
+    public CollectionDto<ChannelUserDto> getUsers(UUID channelId) {
+        var result = sharingWebSocketHandler.getChannelUsers(channelId);
+        if(result == null) {
+            throw new RestApiException(ErrorCodes.NotFound.NOT_FOUND);
+        }
+
+        return result;
     }
 
     @Override

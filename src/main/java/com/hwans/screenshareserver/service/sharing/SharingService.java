@@ -1,5 +1,6 @@
 package com.hwans.screenshareserver.service.sharing;
 
+import com.hwans.screenshareserver.dto.common.CollectionDto;
 import com.hwans.screenshareserver.dto.common.SliceDto;
 import com.hwans.screenshareserver.dto.sharing.*;
 import org.springframework.validation.annotation.Validated;
@@ -20,4 +21,6 @@ public interface SharingService {
     SimpleMessageDto writeMessage(@Valid @NotNull UUID authorUserId, @Valid CreateMessageRequestDto createMessageRequestDto);
 
     SliceDto<SimpleMessageDto> getMessages(@Valid @NotNull UUID channelId, Optional<UUID> cursorId, int size);
+
+    CollectionDto<ChannelUserDto> getUsers(@Valid @NotNull UUID channelId);
 }

@@ -3,6 +3,7 @@ package com.hwans.screenshareserver.controller;
 import com.hwans.screenshareserver.common.Constants;
 import com.hwans.screenshareserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.screenshareserver.common.errors.exception.RestApiException;
+import com.hwans.screenshareserver.dto.common.CollectionDto;
 import com.hwans.screenshareserver.dto.common.SliceDto;
 import com.hwans.screenshareserver.dto.sharing.*;
 import com.hwans.screenshareserver.service.authentication.CurrentAuthenticationDetails;
@@ -56,5 +57,16 @@ public class SharingController {
         }
 
         return sharingService.writeMessage(userAuthenticationDetails.getId(), createMessageRequestDto);
+    }
+
+    @ApiOperation(value = "get sharing channel users", notes = "get users from sharing channel.")
+    @GetMapping(value = "/channels/{channelId}/users")
+    public CollectionDto<ChannelUserDto> getChannelUsers(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                                         @ApiParam(value = "channel id") @PathVariable UUID channelId) {
+        if (!channelId.equals(userAuthenticationDetails.getChannelId())) {
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+        }
+
+        return sharingService.getUsers(channelId);
     }
 }
