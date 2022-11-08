@@ -3,6 +3,8 @@ package com.hwans.screenshareserver.service.sharing;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.hwans.screenshareserver.common.security.RoleType;
+import com.hwans.screenshareserver.dto.common.CollectionDto;
 import com.hwans.screenshareserver.service.authentication.UserAuthenticationDetails;
 import com.hwans.screenshareserver.common.security.jwt.JwtTokenProvider;
 import com.hwans.screenshareserver.dto.sharing.*;
@@ -29,6 +31,7 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
         private final WebSocketSession session;
         private final UUID userId;
         private final UUID channelId;
+        private final RoleType roleType;
 
         public boolean sendMessage(PayloadDto payloadDto) {
             try {
@@ -105,15 +108,16 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
     private void OnJoinChannel(WebSocketSession session, UserAuthenticationDetails userAuthenticationDetails) throws IOException {
         var userId = userAuthenticationDetails.getId();
         var channelId = userAuthenticationDetails.getChannelId();
+        var roleType = userAuthenticationDetails.getAuthorities().stream().map(x -> RoleType.fromName(x.getAuthority())).findFirst().orElse(RoleType.UNKNOWN);
 
         if (userSessions.containsKey(userId)) {
             var existSharingSession = userSessions.get(userId);
             if (!existSharingSession.session.getId().equals(session.getId())) {
                 existSharingSession.session.close(CloseStatus.SESSION_NOT_RELIABLE);
             }
-            userSessions.replace(userId, new SharingSession(session, userId, channelId));
+            userSessions.replace(userId, new SharingSession(session, userId, channelId, roleType));
         } else {
-            userSessions.put(userId, new SharingSession(session, userId, channelId));
+            userSessions.put(userId, new SharingSession(session, userId, channelId, roleType));
         }
 
         sessions.put(session.getId(), userId);
@@ -168,8 +172,7 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
                         .build());
     }
 
-    public void broadcastNewMessage(UUID channelId, SimpleMessageDto simpleMessageDto)
-    {
+    public void broadcastNewMessage(UUID channelId, SimpleMessageDto simpleMessageDto) {
         var channelUsers = channels.get(channelId);
         if (channelUsers == null) {
             return;
@@ -179,5 +182,22 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
         channelUsers.stream()
                 .map(x -> userSessions.get(x))
                 .forEach(x -> x.sendMessage(newMessagePayload));
+    }
+
+    public CollectionDto<ChannelUserDto> getChannelUsers(UUID channelId) {
+        var channelUsers = channels.get(channelId);
+        if (channelUsers == null) {
+            return null;
+        }
+
+        var channelUserDtoList = channelUsers.stream()
+                .map(x -> userSessions.get(x))
+                .map(x -> ChannelUserDto.builder().id(x.getUserId()).roleType(x.getRoleType()).build())
+                .toList();
+
+        return CollectionDto.<ChannelUserDto>builder()
+                .data(channelUserDtoList)
+                .size(channelUserDtoList.size())
+                .build();
     }
 }
