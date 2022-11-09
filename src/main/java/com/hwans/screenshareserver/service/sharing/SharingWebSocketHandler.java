@@ -17,9 +17,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -187,7 +185,10 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
     public CollectionDto<ChannelUserDto> getChannelUsers(UUID channelId) {
         var channelUsers = channels.get(channelId);
         if (channelUsers == null) {
-            return null;
+            return CollectionDto.<ChannelUserDto>builder()
+                    .data(Collections.emptyList())
+                    .size(0)
+                    .build();
         }
 
         var channelUserDtoList = channelUsers.stream()
