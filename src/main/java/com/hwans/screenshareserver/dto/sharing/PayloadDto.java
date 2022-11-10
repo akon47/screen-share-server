@@ -21,6 +21,7 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = ChannelUserPayloadDto.class, name = "PART_USER"),
         @JsonSubTypes.Type(value = NewMessagePayloadDto.class, name = "NEW_MESSAGE"),
         @JsonSubTypes.Type(value = ChannelUserPayloadDto.class, name = "CHANNEL_JOINED"),
+        @JsonSubTypes.Type(value = ChannelUserPayloadDto.class, name = "CHANNEL_PARTED"),
 })
 @ApiModel(description = "dto for websocket")
 public class PayloadDto implements Serializable {
