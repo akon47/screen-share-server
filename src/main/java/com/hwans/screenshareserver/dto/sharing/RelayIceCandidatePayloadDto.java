@@ -10,10 +10,10 @@ import java.util.UUID;
 @Getter
 @SuperBuilder
 @NoArgsConstructor
-@ApiModel(description = "dto for websocket relay session description")
-public class RelaySessionDescriptionDto extends PayloadDto {
+@ApiModel(description = "dto for websocket relay ice candidate")
+public class RelayIceCandidatePayloadDto extends PayloadDto {
     @ApiModelProperty(value = "relay target user id", required = true)
     UUID userId;
-    @ApiModelProperty(value = "session description", required = true)
-    Object sessionDescription;
+    @ApiModelProperty(value = "ice candidate", required = true)
+    Object iceCandidate;
 }
