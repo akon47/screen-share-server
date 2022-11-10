@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.nio.channels.Channel;
 import java.util.UUID;
 
 @Getter
@@ -13,6 +14,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @ApiModel(description = "dto for websocket join channel")
 public class JoinUserDto extends PayloadDto {
-    @ApiModelProperty(value = "user id", required = true)
-    UUID userId;
+    @ApiModelProperty(value = "user", required = true)
+    ChannelUserDto user;
 }

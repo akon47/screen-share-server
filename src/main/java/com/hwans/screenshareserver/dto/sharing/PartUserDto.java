@@ -13,6 +13,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @ApiModel(description = "dto for websocket join channel")
 public class PartUserDto extends PayloadDto {
-    @ApiModelProperty(value = "user id", required = true)
-    UUID userId;
+    @ApiModelProperty(value = "user", required = true)
+    ChannelUserDto user;
 }

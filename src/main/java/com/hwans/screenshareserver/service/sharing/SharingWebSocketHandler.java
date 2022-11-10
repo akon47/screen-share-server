@@ -75,10 +75,11 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
 
         channelUsers.remove(userId);
 
+        var partedChannelUserDto = ChannelUserDto.builder().id(sharingSession.getUserId()).roleType(sharingSession.getRoleType()).build();
         channelUsers.stream()
                 .map(x -> userSessions.getOrDefault(x, null))
                 .filter(x -> x != null && x.getUserId() != userId)
-                .forEach(x -> x.sendMessage(JoinUserDto.builder().type(PayloadType.PART_USER).userId(userId).build()));
+                .forEach(x -> x.sendMessage(JoinUserDto.builder().type(PayloadType.PART_USER).user(partedChannelUserDto).build()));
     }
 
     @Override
@@ -119,15 +120,19 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
         }
 
         sessions.put(session.getId(), userId);
-
         channels.putIfAbsent(channelId, new HashSet<>());
+
+        var joinedUserSession = userSessions.get(userId);
+        var joinedChannelUserDto = ChannelUserDto.builder().id(joinedUserSession.getUserId()).roleType(joinedUserSession.getRoleType()).build();
 
         var channelUsers = channels.get(channelId);
         channelUsers.add(userId);
         channelUsers.stream()
                 .map(x -> userSessions.getOrDefault(x, null))
                 .filter(x -> x != null && x.getUserId() != userId)
-                .forEach(x -> x.sendMessage(JoinUserDto.builder().type(PayloadType.JOIN_USER).userId(userId).build()));
+                .forEach(x -> x.sendMessage(JoinUserDto.builder().type(PayloadType.JOIN_USER).user(joinedChannelUserDto).build()));
+
+
     }
 
     private void OnPartChannel(WebSocketSession session, UserAuthenticationDetails userAuthenticationDetails) {
