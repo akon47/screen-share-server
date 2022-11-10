@@ -42,6 +42,13 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
                 return false;
             }
         }
+
+        public ChannelUserDto toChannelUserDto() {
+            return ChannelUserDto.builder()
+                    .id(this.userId)
+                    .roleType(this.roleType)
+                    .build();
+        }
     }
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -123,19 +130,42 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
         channels.putIfAbsent(channelId, new HashSet<>());
 
         var joinedUserSession = userSessions.get(userId);
-        var joinedChannelUserDto = ChannelUserDto.builder().id(joinedUserSession.getUserId()).roleType(joinedUserSession.getRoleType()).build();
+        var joinedChannelUserDto = joinedUserSession.toChannelUserDto();
 
         var channelUsers = channels.get(channelId);
-        channelUsers.add(userId);
-        channelUsers.stream()
-                .map(x -> userSessions.getOrDefault(x, null))
-                .filter(x -> x != null && x.getUserId() != userId)
-                .forEach(x -> x.sendMessage(ChannelUserPayloadDto.builder().type(PayloadType.JOIN_USER).user(joinedChannelUserDto).build()));
-        joinedUserSession.sendMessage(ChannelUserPayloadDto.builder().type(PayloadType.CHANNEL_JOINED).user(joinedChannelUserDto).build());
+        if (channelUsers.add(userId)) {
+            channelUsers.stream()
+                    .map(x -> userSessions.getOrDefault(x, null))
+                    .filter(x -> x != null && x.getUserId() != userId)
+                    .forEach(x -> x.sendMessage(ChannelUserPayloadDto.builder().type(PayloadType.JOIN_USER).user(joinedChannelUserDto).build()));
+            joinedUserSession.sendMessage(ChannelUserPayloadDto.builder().type(PayloadType.CHANNEL_JOINED).user(joinedChannelUserDto).build());
+        }
     }
 
     private void OnPartChannel(WebSocketSession session, UserAuthenticationDetails userAuthenticationDetails) {
+        var userId = sessions.get(session.getId());
+        if (userId == null) {
+            return;
+        }
 
+        var sharingSession = userSessions.get(userId);
+        if (sharingSession == null) {
+            return;
+        }
+
+        var channelUsers = channels.get(sharingSession.getChannelId());
+        if (channelUsers == null) {
+            return;
+        }
+
+        if (channelUsers.remove(userId)) {
+            var partedChannelUserDto = sharingSession.toChannelUserDto();
+            channelUsers.stream()
+                    .map(x -> userSessions.getOrDefault(x, null))
+                    .filter(x -> x != null && x.getUserId() != userId)
+                    .forEach(x -> x.sendMessage(ChannelUserPayloadDto.builder().type(PayloadType.JOIN_USER).user(partedChannelUserDto).build()));
+            sharingSession.sendMessage(ChannelUserPayloadDto.builder().type(PayloadType.CHANNEL_PARTED).user(partedChannelUserDto).build());
+        }
     }
 
     private void OnRelaySessionDescription(WebSocketSession session, UserAuthenticationDetails userAuthenticationDetails, RelaySessionDescriptionPayloadDto relaySessionDescriptionPayloadDto) {
