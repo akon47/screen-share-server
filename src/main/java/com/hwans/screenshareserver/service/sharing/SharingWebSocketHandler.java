@@ -79,7 +79,7 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
         channelUsers.stream()
                 .map(x -> userSessions.getOrDefault(x, null))
                 .filter(x -> x != null && x.getUserId() != userId)
-                .forEach(x -> x.sendMessage(JoinUserDto.builder().type(PayloadType.PART_USER).user(partedChannelUserDto).build()));
+                .forEach(x -> x.sendMessage(ChannelUserPayloadDto.builder().type(PayloadType.PART_USER).user(partedChannelUserDto).build()));
     }
 
     @Override
@@ -96,10 +96,10 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
                 OnPartChannel(session, userAuthenticationDetails);
             }
             case RELAY_SESSION_DESCRIPTION -> {
-                OnRelaySessionDescription(session, userAuthenticationDetails, (RelaySessionDescriptionDto) payload);
+                OnRelaySessionDescription(session, userAuthenticationDetails, (RelaySessionDescriptionPayloadDto) payload);
             }
             case RELAY_ICE_CANDIDATE -> {
-                OnRelayIceCandidate(session, userAuthenticationDetails, (RelayIceCandidateDto) payload);
+                OnRelayIceCandidate(session, userAuthenticationDetails, (RelayIceCandidatePayloadDto) payload);
             }
         }
     }
@@ -130,48 +130,47 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
         channelUsers.stream()
                 .map(x -> userSessions.getOrDefault(x, null))
                 .filter(x -> x != null && x.getUserId() != userId)
-                .forEach(x -> x.sendMessage(JoinUserDto.builder().type(PayloadType.JOIN_USER).user(joinedChannelUserDto).build()));
-
-
+                .forEach(x -> x.sendMessage(ChannelUserPayloadDto.builder().type(PayloadType.JOIN_USER).user(joinedChannelUserDto).build()));
+        joinedUserSession.sendMessage(ChannelUserPayloadDto.builder().type(PayloadType.CHANNEL_JOINED).user(joinedChannelUserDto).build());
     }
 
     private void OnPartChannel(WebSocketSession session, UserAuthenticationDetails userAuthenticationDetails) {
 
     }
 
-    private void OnRelaySessionDescription(WebSocketSession session, UserAuthenticationDetails userAuthenticationDetails, RelaySessionDescriptionDto relaySessionDescriptionDto) {
+    private void OnRelaySessionDescription(WebSocketSession session, UserAuthenticationDetails userAuthenticationDetails, RelaySessionDescriptionPayloadDto relaySessionDescriptionPayloadDto) {
         var userId = userAuthenticationDetails.getId();
         var channelId = userAuthenticationDetails.getChannelId();
 
         var channelUsers = channels.get(channelId);
-        if (channelUsers == null || !channelUsers.contains(relaySessionDescriptionDto.getUserId())) {
+        if (channelUsers == null || !channelUsers.contains(relaySessionDescriptionPayloadDto.getUserId())) {
             return;
         }
 
-        userSessions.get(relaySessionDescriptionDto.getUserId())
-                .sendMessage(RelaySessionDescriptionDto
+        userSessions.get(relaySessionDescriptionPayloadDto.getUserId())
+                .sendMessage(RelaySessionDescriptionPayloadDto
                         .builder()
                         .type(PayloadType.RELAY_SESSION_DESCRIPTION)
                         .userId(userId)
-                        .sessionDescription(relaySessionDescriptionDto.getSessionDescription())
+                        .sessionDescription(relaySessionDescriptionPayloadDto.getSessionDescription())
                         .build());
     }
 
-    private void OnRelayIceCandidate(WebSocketSession session, UserAuthenticationDetails userAuthenticationDetails, RelayIceCandidateDto relayIceCandidateDto) {
+    private void OnRelayIceCandidate(WebSocketSession session, UserAuthenticationDetails userAuthenticationDetails, RelayIceCandidatePayloadDto relayIceCandidatePayloadDto) {
         var userId = userAuthenticationDetails.getId();
         var channelId = userAuthenticationDetails.getChannelId();
 
         var channelUsers = channels.get(channelId);
-        if (channelUsers == null || !channelUsers.contains(relayIceCandidateDto.getUserId())) {
+        if (channelUsers == null || !channelUsers.contains(relayIceCandidatePayloadDto.getUserId())) {
             return;
         }
 
-        userSessions.get(relayIceCandidateDto.getUserId())
-                .sendMessage(RelayIceCandidateDto
+        userSessions.get(relayIceCandidatePayloadDto.getUserId())
+                .sendMessage(RelayIceCandidatePayloadDto
                         .builder()
                         .type(PayloadType.RELAY_ICE_CANDIDATE)
                         .userId(userId)
-                        .iceCandidate(relayIceCandidateDto.getIceCandidate())
+                        .iceCandidate(relayIceCandidatePayloadDto.getIceCandidate())
                         .build());
     }
 
@@ -181,7 +180,7 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
-        var newMessagePayload = NewMessageDto.builder().type(PayloadType.NEW_MESSAGE).message(simpleMessageDto).build();
+        var newMessagePayload = NewMessagePayloadDto.builder().type(PayloadType.NEW_MESSAGE).message(simpleMessageDto).build();
         channelUsers.stream()
                 .map(x -> userSessions.get(x))
                 .forEach(x -> x.sendMessage(newMessagePayload));
