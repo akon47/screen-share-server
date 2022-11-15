@@ -14,3 +14,10 @@ This is a signaling server project for screen sharing service using spring frame
 
 ## 🐞 Bug Report
 - If you find a bug, please report to us posting [issues](https://github.com/akon47/screen-share/issues) on GitHub.
+
+## 🚀 API Document
+
+[https://api.screenshare.kimhwan.kr/swagger-ui/index.html](https://api.screenshare.kimhwan.kr/swagger-ui/index.html)
+
+## 🚀 서비스
+https://screenshare.kimhwan.kr/
