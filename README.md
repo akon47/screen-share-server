@@ -19,5 +19,5 @@ This is a signaling server project for screen sharing service using spring frame
 
 [https://api.screenshare.kimhwan.kr/swagger-ui/index.html](https://api.screenshare.kimhwan.kr/swagger-ui/index.html)
 
-## 🚀 서비스
+## 🚀 Service
 https://screenshare.kimhwan.kr/
