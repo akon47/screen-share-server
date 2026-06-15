@@ -2,6 +2,12 @@ server:
   tomcat:
     use-relative-redirects: true
   forward-headers-strategy: native
+cloudflare:
+  turn:
+    # Cloudflare Realtime TURN credentials. When empty, the client falls back to
+    # STUN-only (no TURN relay). Provide via CF_TURN_KEY_ID / CF_TURN_API_TOKEN.
+    key-id: ${CF_TURN_KEY_ID:}
+    api-token: ${CF_TURN_API_TOKEN:}
 spring:
   profiles:
     active: local

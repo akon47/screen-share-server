@@ -9,6 +9,7 @@ import com.hwans.screenshareserver.dto.sharing.*;
 import com.hwans.screenshareserver.service.authentication.CurrentAuthenticationDetails;
 import com.hwans.screenshareserver.service.authentication.UserAuthenticationDetails;
 import com.hwans.screenshareserver.service.sharing.SharingService;
+import com.hwans.screenshareserver.service.sharing.TurnService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -25,6 +26,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SharingController {
     private final SharingService sharingService;
+    private final TurnService turnService;
+
+    @ApiOperation(value = "get ICE servers", notes = "get short-lived STUN/TURN ICE servers for a WebRTC session.")
+    @GetMapping(value = "/turn-credentials")
+    public TurnCredentialsDto getTurnCredentials() {
+        return turnService.generateCredentials();
+    }
 
     @ApiOperation(value = "create new sharing channel", notes = "create a new sharing channel.")
     @PostMapping(value = "/channels")
