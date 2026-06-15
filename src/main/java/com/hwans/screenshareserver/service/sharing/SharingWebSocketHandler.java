@@ -278,4 +278,9 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
         var channelUsers = channels.get(channelId);
         return channelUsers == null ? 0 : channelUsers.size();
     }
+
+    public Set<UUID> getChannelUserIds(UUID channelId) {
+        var channelUsers = channels.get(channelId);
+        return channelUsers == null ? Collections.emptySet() : new HashSet<>(channelUsers);
+    }
 }

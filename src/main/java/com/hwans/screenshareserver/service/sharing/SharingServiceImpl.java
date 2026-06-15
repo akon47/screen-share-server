@@ -171,6 +171,20 @@ public class SharingServiceImpl implements SharingService, UserDetailsService {
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
 
         var trimmed = (nickname == null || nickname.isBlank()) ? null : nickname.trim();
+
+        // Reject a nickname already used by another active user in the channel.
+        if (trimmed != null) {
+            var channelId = user.getChannel().getId();
+            var otherActiveIds = sharingWebSocketHandler.getChannelUserIds(channelId).stream()
+                    .filter(id -> !id.equals(userId))
+                    .toList();
+            var duplicated = sharingUserRepository.findAllById(otherActiveIds).stream()
+                    .anyMatch(other -> trimmed.equalsIgnoreCase(other.getNickname()));
+            if (duplicated) {
+                throw new RestApiException(ErrorCodes.Conflict.CONFLICT);
+            }
+        }
+
         user.setNickname(trimmed);
 
         var updatedUser = ChannelUserDto.builder()
