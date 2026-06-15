@@ -23,9 +23,4 @@ public enum PayloadType {
     // Host kicks a user (KICK request) / target is notified (KICKED).
     KICK,
     KICKED,
-    // Presenter handoff: a guest asks to present, the host assigns a presenter,
-    // and everyone is told who the current presenter is.
-    REQUEST_PRESENT,
-    SET_PRESENTER,
-    PRESENTER_CHANGED,
 }
