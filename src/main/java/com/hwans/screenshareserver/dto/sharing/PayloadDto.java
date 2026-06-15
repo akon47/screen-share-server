@@ -22,6 +22,12 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = NewMessagePayloadDto.class, name = "NEW_MESSAGE"),
         @JsonSubTypes.Type(value = ChannelUserPayloadDto.class, name = "CHANNEL_JOINED"),
         @JsonSubTypes.Type(value = ChannelUserPayloadDto.class, name = "CHANNEL_PARTED"),
+        @JsonSubTypes.Type(value = ReactionPayloadDto.class, name = "REACTION"),
+        @JsonSubTypes.Type(value = KickPayloadDto.class, name = "KICK"),
+        @JsonSubTypes.Type(value = KickPayloadDto.class, name = "KICKED"),
+        @JsonSubTypes.Type(value = PresenterPayloadDto.class, name = "REQUEST_PRESENT"),
+        @JsonSubTypes.Type(value = PresenterPayloadDto.class, name = "SET_PRESENTER"),
+        @JsonSubTypes.Type(value = PresenterPayloadDto.class, name = "PRESENTER_CHANGED"),
 })
 @ApiModel(description = "dto for websocket")
 public class PayloadDto implements Serializable {

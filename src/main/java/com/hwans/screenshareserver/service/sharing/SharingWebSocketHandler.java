@@ -57,6 +57,8 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
     private final Map<String, UUID> sessions = new ConcurrentHashMap<>();
     private final Map<UUID, SharingSession> userSessions = new ConcurrentHashMap<>();
     private final Map<UUID, HashSet<UUID>> channels = new ConcurrentHashMap<>();
+    // The user currently presenting (sending media) in each channel.
+    private final Map<UUID, UUID> channelPresenters = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -89,6 +91,21 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
                 .map(x -> userSessions.getOrDefault(x, null))
                 .filter(x -> x != null && x.getUserId() != userId)
                 .forEach(x -> x.sendMessage(ChannelUserPayloadDto.builder().type(PayloadType.PART_USER).user(partedChannelUserDto).build()));
+
+        // If the user who left was presenting, hand presenting back to the host.
+        var channelId = sharingSession.getChannelId();
+        if (userId.equals(channelPresenters.get(channelId))) {
+            var newPresenter = findHostUserId(channelId);
+            if (newPresenter != null) {
+                channelPresenters.put(channelId, newPresenter);
+                broadcastToChannel(channelId, PresenterPayloadDto.builder().type(PayloadType.PRESENTER_CHANGED).userId(newPresenter).build(), null);
+            } else {
+                channelPresenters.remove(channelId);
+            }
+        }
+        if (channelUsers.isEmpty()) {
+            channelPresenters.remove(channelId);
+        }
     }
 
     @Override
@@ -109,6 +126,18 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
             }
             case RELAY_ICE_CANDIDATE -> {
                 OnRelayIceCandidate(session, userAuthenticationDetails, (RelayIceCandidatePayloadDto) payload);
+            }
+            case REACTION -> {
+                OnReaction(userAuthenticationDetails, (ReactionPayloadDto) payload);
+            }
+            case KICK -> {
+                OnKick(userAuthenticationDetails, (KickPayloadDto) payload);
+            }
+            case REQUEST_PRESENT -> {
+                OnRequestPresent(userAuthenticationDetails);
+            }
+            case SET_PRESENTER -> {
+                OnSetPresenter(userAuthenticationDetails, (PresenterPayloadDto) payload);
             }
         }
     }
@@ -134,6 +163,11 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
         var joinedUserSession = userSessions.get(userId);
         var joinedChannelUserDto = joinedUserSession.toChannelUserDto();
 
+        // The host is the default presenter for the channel.
+        if (roleType == RoleType.HOST) {
+            channelPresenters.putIfAbsent(channelId, userId);
+        }
+
         var channelUsers = channels.get(channelId);
         if (channelUsers.add(userId)) {
             channelUsers.stream()
@@ -141,6 +175,12 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
                     .filter(x -> x != null && x.getUserId() != userId)
                     .forEach(x -> x.sendMessage(ChannelUserPayloadDto.builder().type(PayloadType.JOIN_USER).user(joinedChannelUserDto).build()));
             joinedUserSession.sendMessage(ChannelUserPayloadDto.builder().type(PayloadType.CHANNEL_JOINED).user(joinedChannelUserDto).build());
+
+            // Tell the joiner who is currently presenting so they render the right UI.
+            var presenter = channelPresenters.get(channelId);
+            if (presenter != null) {
+                joinedUserSession.sendMessage(PresenterPayloadDto.builder().type(PayloadType.PRESENTER_CHANGED).userId(presenter).build());
+            }
         }
     }
 
@@ -204,6 +244,117 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
                         .userId(userId)
                         .iceCandidate(relayIceCandidatePayloadDto.getIceCandidate())
                         .build());
+    }
+
+    private void OnReaction(UserAuthenticationDetails userAuthenticationDetails, ReactionPayloadDto reactionPayloadDto) {
+        var channelId = userAuthenticationDetails.getChannelId();
+        var emoji = reactionPayloadDto.getEmoji();
+        if (emoji == null || emoji.isBlank() || emoji.length() > 16) {
+            return;
+        }
+        var payload = ReactionPayloadDto.builder()
+                .type(PayloadType.REACTION)
+                .emoji(emoji)
+                .userId(userAuthenticationDetails.getId())
+                .build();
+        // Broadcast to everyone except the sender (the sender animates locally).
+        broadcastToChannel(channelId, payload, userAuthenticationDetails.getId());
+    }
+
+    private void OnKick(UserAuthenticationDetails userAuthenticationDetails, KickPayloadDto kickPayloadDto) {
+        if (!userAuthenticationDetails.isHost()) {
+            return;
+        }
+        var channelId = userAuthenticationDetails.getChannelId();
+        var targetUserId = kickPayloadDto.getUserId();
+        if (targetUserId == null || targetUserId.equals(userAuthenticationDetails.getId())) {
+            return;
+        }
+        var channelUsers = channels.get(channelId);
+        if (channelUsers == null || !channelUsers.contains(targetUserId)) {
+            return;
+        }
+        var targetSession = userSessions.get(targetUserId);
+        if (targetSession == null) {
+            return;
+        }
+        // Notify the target, then close their session. afterConnectionClosed
+        // takes care of removing them and broadcasting PART_USER to the rest.
+        targetSession.sendMessage(KickPayloadDto.builder().type(PayloadType.KICKED).userId(targetUserId).build());
+        try {
+            targetSession.getSession().close(CloseStatus.NORMAL);
+        } catch (IOException ignored) {
+        }
+    }
+
+    private void OnRequestPresent(UserAuthenticationDetails userAuthenticationDetails) {
+        var channelId = userAuthenticationDetails.getChannelId();
+        var hostUserId = findHostUserId(channelId);
+        if (hostUserId == null) {
+            return;
+        }
+        var hostSession = userSessions.get(hostUserId);
+        if (hostSession == null) {
+            return;
+        }
+        hostSession.sendMessage(PresenterPayloadDto.builder()
+                .type(PayloadType.REQUEST_PRESENT)
+                .userId(userAuthenticationDetails.getId())
+                .build());
+    }
+
+    private void OnSetPresenter(UserAuthenticationDetails userAuthenticationDetails, PresenterPayloadDto presenterPayloadDto) {
+        var channelId = userAuthenticationDetails.getChannelId();
+        var channelUsers = channels.get(channelId);
+        if (channelUsers == null) {
+            return;
+        }
+        // Only the host, or the user currently presenting, may change the presenter.
+        var currentPresenter = channelPresenters.get(channelId);
+        var authorized = userAuthenticationDetails.isHost()
+                || userAuthenticationDetails.getId().equals(currentPresenter);
+        if (!authorized) {
+            return;
+        }
+        // A null target means "release presenting back to the host".
+        var targetUserId = presenterPayloadDto.getUserId();
+        if (targetUserId == null) {
+            targetUserId = findHostUserId(channelId);
+        }
+        if (targetUserId == null || !channelUsers.contains(targetUserId)) {
+            return;
+        }
+        channelPresenters.put(channelId, targetUserId);
+        broadcastToChannel(channelId, PresenterPayloadDto.builder()
+                .type(PayloadType.PRESENTER_CHANGED)
+                .userId(targetUserId)
+                .build(), null);
+    }
+
+    private UUID findHostUserId(UUID channelId) {
+        var channelUsers = channels.get(channelId);
+        if (channelUsers == null) {
+            return null;
+        }
+        return channelUsers.stream()
+                .map(userSessions::get)
+                .filter(Objects::nonNull)
+                .filter(s -> s.getRoleType() == RoleType.HOST)
+                .map(SharingSession::getUserId)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void broadcastToChannel(UUID channelId, PayloadDto payload, UUID excludeUserId) {
+        var channelUsers = channels.get(channelId);
+        if (channelUsers == null) {
+            return;
+        }
+        channelUsers.stream()
+                .map(userSessions::get)
+                .filter(Objects::nonNull)
+                .filter(s -> excludeUserId == null || !s.getUserId().equals(excludeUserId))
+                .forEach(s -> s.sendMessage(payload));
     }
 
     public void broadcastNewMessage(UUID channelId, SimpleMessageDto simpleMessageDto) {
