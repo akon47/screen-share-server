@@ -83,4 +83,16 @@ public class SharingController {
 
         return sharingService.getUsers(channelId);
     }
+
+    @ApiOperation(value = "update nickname", notes = "update the current user's nickname in the channel.")
+    @PutMapping(value = "/channels/{channelId}/users/nickname")
+    public ChannelUserDto updateNickname(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                         @ApiParam(value = "channel id") @PathVariable UUID channelId,
+                                         @ApiParam(value = "nickname data", required = true) @RequestBody @Valid final UpdateNicknameRequestDto updateNicknameRequestDto) {
+        if (!channelId.equals(userAuthenticationDetails.getChannelId())) {
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+        }
+
+        return sharingService.updateNickname(userAuthenticationDetails.getId(), updateNicknameRequestDto.getNickname());
+    }
 }

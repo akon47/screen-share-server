@@ -25,4 +25,7 @@ public interface SharingService {
     CollectionDto<ChannelUserDto> getUsers(@Valid @NotNull UUID channelId);
 
     CollectionDto<PublicChannelDto> getPublicChannels();
+
+    @Validated
+    ChannelUserDto updateNickname(@Valid @NotNull UUID userId, String nickname);
 }

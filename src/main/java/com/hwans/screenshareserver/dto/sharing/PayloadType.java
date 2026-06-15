@@ -13,6 +13,7 @@ public enum PayloadType {
 
     JOIN_USER,
     PART_USER,
+    USER_UPDATED,
     NEW_MESSAGE,
     CHANNEL_JOINED,
     CHANNEL_PARTED,

@@ -218,6 +218,19 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
                 .forEach(x -> x.sendMessage(newMessagePayload));
     }
 
+    public void broadcastUserUpdated(UUID channelId, ChannelUserDto updatedUser) {
+        var channelUsers = channels.get(channelId);
+        if (channelUsers == null) {
+            return;
+        }
+
+        var payload = ChannelUserPayloadDto.builder().type(PayloadType.USER_UPDATED).user(updatedUser).build();
+        channelUsers.stream()
+                .map(userSessions::get)
+                .filter(Objects::nonNull)
+                .forEach(session -> session.sendMessage(payload));
+    }
+
     public CollectionDto<ChannelUserDto> getChannelUsers(UUID channelId) {
         var channelUsers = channels.get(channelId);
         if (channelUsers == null) {

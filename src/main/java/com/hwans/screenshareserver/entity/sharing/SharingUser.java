@@ -21,6 +21,9 @@ public class SharingUser extends BaseEntity {
     private UUID id;
     @Column(length = 32, nullable = false)
     private String role;
+    @Column(length = 30)
+    @Setter
+    private String nickname;
     @Column(length = 255)
     @Setter
     private String token;

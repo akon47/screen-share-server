@@ -143,7 +143,43 @@ public class SharingServiceImpl implements SharingService, UserDetailsService {
             throw new RestApiException(ErrorCodes.NotFound.NOT_FOUND);
         }
 
-        return result;
+        // Enrich the in-memory session list with nicknames from the database.
+        var userIds = result.getData().stream().map(ChannelUserDto::getId).toList();
+        var nicknameById = sharingUserRepository.findAllById(userIds).stream()
+                .filter(user -> user.getNickname() != null)
+                .collect(Collectors.toMap(SharingUser::getId, SharingUser::getNickname));
+
+        var enriched = result.getData().stream()
+                .map(user -> ChannelUserDto.builder()
+                        .id(user.getId())
+                        .roleType(user.getRoleType())
+                        .nickname(nicknameById.get(user.getId()))
+                        .build())
+                .toList();
+
+        return CollectionDto.<ChannelUserDto>builder()
+                .data(enriched)
+                .size(enriched.size())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ChannelUserDto updateNickname(UUID userId, String nickname) {
+        var user = sharingUserRepository
+                .findById(userId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+
+        var trimmed = (nickname == null || nickname.isBlank()) ? null : nickname.trim();
+        user.setNickname(trimmed);
+
+        var updatedUser = ChannelUserDto.builder()
+                .id(user.getId())
+                .roleType(RoleType.fromName(user.getRole()))
+                .nickname(trimmed)
+                .build();
+        sharingWebSocketHandler.broadcastUserUpdated(user.getChannel().getId(), updatedUser);
+        return updatedUser;
     }
 
     @Override

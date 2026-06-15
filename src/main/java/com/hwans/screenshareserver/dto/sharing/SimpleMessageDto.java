@@ -23,6 +23,8 @@ public class SimpleMessageDto implements Serializable {
     @ApiModelProperty(value = "author id", required = true)
     @NotNull
     UUID authorId;
+    @ApiModelProperty(value = "author nickname")
+    String authorNickname;
     @ApiModelProperty(value = "created at", required = true)
     @NotNull
     LocalDateTime createdAt;

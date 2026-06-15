@@ -26,6 +26,7 @@ public abstract class SharingMapper {
     @Mapping(target = "deleted", constant = "false")
     public abstract SharingMessage toEntity(CreateMessageRequestDto createMessageRequestDto);
 
+    @Mapping(target = "authorNickname", source = "author.nickname")
     public abstract SimpleMessageDto entityToSimpleMessageDto(SharingMessage sharingMessage);
 
     @Named("encodePassword")

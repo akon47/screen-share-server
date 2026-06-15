@@ -21,4 +21,6 @@ public class ChannelUserDto implements Serializable {
     @ApiModelProperty(value = "role type", required = true)
     @NotNull
     RoleType roleType;
+    @ApiModelProperty(value = "user nickname")
+    String nickname;
 }
