@@ -17,4 +17,8 @@ spring:
       ddl-auto: update
 jwt:
   base64-secret: '{jwt-base64-common-secret}'
+cloudflare:
+  turn:
+    key-id: '{cf-turn-key-id}'
+    api-token: '{cf-turn-api-token}'
 allowedOrigins: 'https://screenshare.kimhwan.kr'

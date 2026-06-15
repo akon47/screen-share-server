@@ -20,6 +20,9 @@ pipeline {
 
         SPRING_JWT_COMMON_SECRET_KEY = credentials('spring-jwt-base64-common-secret')
 
+        CF_TURN_KEY_ID = credentials('cloudflare-turn-key-id')
+        CF_TURN_API_TOKEN = credentials('cloudflare-turn-api-token')
+
         SPRING_REDIS_HOST = 'localhost'
         SPRING_REDIS_PORT = '6379'
 
@@ -56,6 +59,9 @@ pipeline {
                     prodProperties = prodProperties.replaceAll(/\{redis-port\}/, SPRING_REDIS_PORT)
 
                     prodProperties = prodProperties.replaceAll(/\{jwt-base64-common-secret\}/, SPRING_JWT_COMMON_SECRET_KEY)
+
+                    prodProperties = prodProperties.replaceAll(/\{cf-turn-key-id\}/, CF_TURN_KEY_ID)
+                    prodProperties = prodProperties.replaceAll(/\{cf-turn-api-token\}/, CF_TURN_API_TOKEN)
 
                     writeFile file: SPRING_PROD_PROPERTIES_PATH, text: prodProperties
                 }
