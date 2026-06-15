@@ -32,6 +32,12 @@ public class SharingController {
         return sharingService.createChannel(createChannelRequestDto);
     }
 
+    @ApiOperation(value = "get public sharing channels", notes = "get the list of publicly listed, currently active sharing channels.")
+    @GetMapping(value = "/channels/public")
+    public CollectionDto<PublicChannelDto> getPublicChannels() {
+        return sharingService.getPublicChannels();
+    }
+
     @ApiOperation(value = "join sharing channel", notes = "join a new sharing channel.")
     @PostMapping(value = "/channels/{channelId}/join")
     public JoinChannelResponseDto joinChannel(@ApiParam(value = "channel id") @PathVariable UUID channelId,

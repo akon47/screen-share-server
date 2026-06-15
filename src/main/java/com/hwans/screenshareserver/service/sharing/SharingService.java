@@ -23,4 +23,6 @@ public interface SharingService {
     SliceDto<SimpleMessageDto> getMessages(@Valid @NotNull UUID channelId, Optional<UUID> cursorId, int size);
 
     CollectionDto<ChannelUserDto> getUsers(@Valid @NotNull UUID channelId);
+
+    CollectionDto<PublicChannelDto> getPublicChannels();
 }

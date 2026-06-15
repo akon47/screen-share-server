@@ -30,7 +30,9 @@ public abstract class SharingMapper {
 
     @Named("encodePassword")
     String encoderPassword(String password) {
-        if (password == null)
+        // Treat blank passwords as "no password" so password-protected channels
+        // can be reliably distinguished (a null stored hash == open channel).
+        if (password == null || password.isBlank())
             return null;
 
         return passwordEncoder.encode(password);

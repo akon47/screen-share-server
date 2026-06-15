@@ -18,6 +18,8 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -52,9 +54,9 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
     }
 
     private final JwtTokenProvider jwtTokenProvider;
-    private HashMap<String, UUID> sessions = new HashMap<>();
-    private HashMap<UUID, SharingSession> userSessions = new HashMap<>();
-    private HashMap<UUID, HashSet<UUID>> channels = new HashMap<>();
+    private final Map<String, UUID> sessions = new ConcurrentHashMap<>();
+    private final Map<UUID, SharingSession> userSessions = new ConcurrentHashMap<>();
+    private final Map<UUID, HashSet<UUID>> channels = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -234,5 +236,33 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
                 .data(channelUserDtoList)
                 .size(channelUserDtoList.size())
                 .build();
+    }
+
+    /**
+     * Channel ids that currently have at least one connected user.
+     */
+    public Set<UUID> getActiveChannelIds() {
+        return channels.entrySet().stream()
+                .filter(entry -> entry.getValue() != null && !entry.getValue().isEmpty())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Channel ids that currently have a connected host (used for the public list).
+     */
+    public Set<UUID> getActiveChannelIdsWithHost() {
+        return channels.entrySet().stream()
+                .filter(entry -> entry.getValue() != null && entry.getValue().stream().anyMatch(userId -> {
+                    var sharingSession = userSessions.get(userId);
+                    return sharingSession != null && sharingSession.getRoleType() == RoleType.HOST;
+                }))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+    }
+
+    public int getChannelUserCount(UUID channelId) {
+        var channelUsers = channels.get(channelId);
+        return channelUsers == null ? 0 : channelUsers.size();
     }
 }

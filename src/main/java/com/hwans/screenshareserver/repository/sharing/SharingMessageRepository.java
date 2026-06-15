@@ -5,6 +5,7 @@ import com.hwans.screenshareserver.entity.sharing.SharingUser;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -19,4 +20,8 @@ public interface SharingMessageRepository extends JpaRepository<SharingMessage, 
 
     @Query("select x from SharingMessage as x where x.deleted = false and x.author.channel.id = :channelId and ((x.createdAt < :createdAt and x.id < :id) or (x.createdAt < :createdAt)) order by x.createdAt desc, x.id desc")
     List<SharingMessage> findByIdLessThanOrderByIdDesc(@Param("channelId") UUID channelId, @Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, Pageable page);
+
+    @Modifying
+    @Query("delete from SharingMessage m where m.author.id in (select u.id from SharingUser u where u.channel.id = :channelId)")
+    void deleteAllByChannelId(@Param("channelId") UUID channelId);
 }

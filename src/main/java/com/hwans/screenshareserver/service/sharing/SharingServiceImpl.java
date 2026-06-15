@@ -76,7 +76,9 @@ public class SharingServiceImpl implements SharingService, UserDetailsService {
                 .findById(channelId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
 
-        if (!passwordEncoder.matches(joinChannelRequestDto.getPassword(), channel.getPassword())) {
+        // A null stored password means the channel has no password; otherwise verify it.
+        if (channel.getPassword() != null
+                && !passwordEncoder.matches(joinChannelRequestDto.getPassword(), channel.getPassword())) {
             throw new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED);
         }
 
@@ -142,6 +144,27 @@ public class SharingServiceImpl implements SharingService, UserDetailsService {
         }
 
         return result;
+    }
+
+    @Override
+    public CollectionDto<PublicChannelDto> getPublicChannels() {
+        // Only list public channels that currently have a connected host.
+        var activeChannelIds = sharingWebSocketHandler.getActiveChannelIdsWithHost();
+        var publicChannels = sharingChannelRepository.findPublicChannels().stream()
+                .filter(channel -> activeChannelIds.contains(channel.getId()))
+                .map(channel -> PublicChannelDto.builder()
+                        .channelId(channel.getId())
+                        .title(channel.getTitle())
+                        .hasPassword(channel.getPassword() != null)
+                        .userCount(sharingWebSocketHandler.getChannelUserCount(channel.getId()))
+                        .createdAt(channel.getCreatedAt())
+                        .build())
+                .toList();
+
+        return CollectionDto.<PublicChannelDto>builder()
+                .data(publicChannels)
+                .size(publicChannels.size())
+                .build();
     }
 
     @Override
