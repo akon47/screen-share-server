@@ -25,6 +25,8 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = ReactionPayloadDto.class, name = "REACTION"),
         @JsonSubTypes.Type(value = KickPayloadDto.class, name = "KICK"),
         @JsonSubTypes.Type(value = KickPayloadDto.class, name = "KICKED"),
+        @JsonSubTypes.Type(value = DrawPayloadDto.class, name = "DRAW"),
+        @JsonSubTypes.Type(value = DrawPayloadDto.class, name = "CLEAR_DRAW"),
 })
 @ApiModel(description = "dto for websocket")
 public class PayloadDto implements Serializable {

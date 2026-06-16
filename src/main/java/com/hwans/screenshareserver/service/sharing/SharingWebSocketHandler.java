@@ -116,6 +116,12 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
             case KICK -> {
                 OnKick(userAuthenticationDetails, (KickPayloadDto) payload);
             }
+            case DRAW -> {
+                OnDraw(userAuthenticationDetails, (DrawPayloadDto) payload);
+            }
+            case CLEAR_DRAW -> {
+                OnClearDraw(userAuthenticationDetails);
+            }
         }
     }
 
@@ -251,6 +257,58 @@ public class SharingWebSocketHandler extends TextWebSocketHandler {
             targetSession.getSession().close(CloseStatus.NORMAL);
         } catch (IOException ignored) {
         }
+    }
+
+    private void OnDraw(UserAuthenticationDetails userAuthenticationDetails, DrawPayloadDto drawPayloadDto) {
+        // Only the host may draw annotations over the shared screen.
+        if (!userAuthenticationDetails.isHost()) {
+            return;
+        }
+        var points = drawPayloadDto.getPoints();
+        // Reject empty / oversized batches (each point is an [x, y] pair).
+        if (points == null || points.isEmpty() || points.size() % 2 != 0 || points.size() > 2000) {
+            return;
+        }
+        var channelId = userAuthenticationDetails.getChannelId();
+        var payload = DrawPayloadDto.builder()
+                .type(PayloadType.DRAW)
+                .strokeId(drawPayloadDto.getStrokeId())
+                .mode(drawPayloadDto.getMode())
+                .color(drawPayloadDto.getColor())
+                .width(drawPayloadDto.getWidth())
+                .points(points)
+                .userId(userAuthenticationDetails.getId())
+                .build();
+
+        var targetUserId = drawPayloadDto.getTargetUserId();
+        if (targetUserId != null) {
+            // Directed delivery: replay existing strokes to a single new joiner
+            // without re-drawing them for everyone already in the channel.
+            var channelUsers = channels.get(channelId);
+            if (channelUsers == null || !channelUsers.contains(targetUserId)) {
+                return;
+            }
+            var targetSession = userSessions.get(targetUserId);
+            if (targetSession != null) {
+                targetSession.sendMessage(payload);
+            }
+            return;
+        }
+
+        // The host renders locally; broadcast to everyone else.
+        broadcastToChannel(channelId, payload, userAuthenticationDetails.getId());
+    }
+
+    private void OnClearDraw(UserAuthenticationDetails userAuthenticationDetails) {
+        if (!userAuthenticationDetails.isHost()) {
+            return;
+        }
+        var channelId = userAuthenticationDetails.getChannelId();
+        var payload = DrawPayloadDto.builder()
+                .type(PayloadType.CLEAR_DRAW)
+                .userId(userAuthenticationDetails.getId())
+                .build();
+        broadcastToChannel(channelId, payload, userAuthenticationDetails.getId());
     }
 
     private void broadcastToChannel(UUID channelId, PayloadDto payload, UUID excludeUserId) {

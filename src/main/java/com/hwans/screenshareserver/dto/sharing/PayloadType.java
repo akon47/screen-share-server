@@ -23,4 +23,9 @@ public enum PayloadType {
     // Host kicks a user (KICK request) / target is notified (KICKED).
     KICK,
     KICKED,
+
+    // Host pen-drawing annotation broadcast over the shared screen.
+    DRAW,
+    // Host clears all drawing annotations.
+    CLEAR_DRAW,
 }
